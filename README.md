@@ -117,6 +117,11 @@ function analyzeGameState(currentImages) {
 - Performance optimization techniques
 - Educational tool development
 
+## ⚠️ Important Notice
+This project is strictly for educational and research purposes. 
+Using this script to cheat in games may violate terms of service and could result in account suspension or banning. 
+The authors are not responsible for any misuse of this code.
+
 ---
 
 *This project is for educational and research purposes, demonstrating web automation and algorithmic problem-solving techniques.*
