@@ -8,6 +8,17 @@
     let hackInterval = null;
     let lastImages = null; // Track last question to avoid multiple clicks
 
+    // Set custom username for score history
+    function setUsername(name) {
+        if (typeof name === 'string' && name.trim()) {
+            window.username = name.trim();
+            console.log('👤 Username set to:', window.username);
+            return true;
+        }
+        console.warn('⚠️ Invalid username provided');
+        return false;
+    }
+
     // Function to get current images displayed
     function getCurrentImages() {
         const images = [];
@@ -163,6 +174,7 @@
             console.log('🖱️ Manual click on p' + pos);
         }
     };
+    window.setUsername = setUsername;
 
     // Global commands
     window.stophack = stopHack;
@@ -175,6 +187,7 @@
     console.log('📋 Available commands:');
     console.log('   stophack() - Stop the auto-hack manually');
     console.log('   starthack() - Restart the auto-hack');
+    console.log('   setUsername("YourName") - Set username for score history');
     console.log('   getCurrentImages() - Get current displayed images');
     console.log('   findAnswer() - Find correct answer for current question');
     console.log('   manualClick(pos) - Manually click position 1-4');

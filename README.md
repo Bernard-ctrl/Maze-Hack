@@ -29,6 +29,9 @@ getCurrentImages()
 // Test pattern matching logic
 findAnswer()
 
+// Set custom username for score history
+setUsername("YourName")
+
 // Demonstrate algorithmic solving
 manualClick(position)
 ```
