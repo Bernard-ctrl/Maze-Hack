@@ -7,16 +7,36 @@
     let hackActive = true;
     let hackInterval = null;
     let lastImages = null; // Track last question to avoid multiple clicks
+    let lastClickAt = 0;
+
+    // Hack settings (set to a number to enable, or null to disable)
+    const hackSettings = {
+        maxScore: 50,        // cap score to 50
+        stopAtTimer: null,   // e.g., 2 to stop before end, null to run until time ends
+        minClickDelayMs: 0 // slow scoring: minimum delay between clicks
+    };
 
     // Set custom username for score history
+    let customUsername = null;
     function setUsername(name) {
         if (typeof name === 'string' && name.trim()) {
-            window.username = name.trim();
-            console.log('👤 Username set to:', window.username);
+            customUsername = name.trim();
+            // In updated code, username is a local variable, not window.username
+            username = customUsername;
+            console.log('👤 Username set to:', username);
             return true;
         }
         console.warn('⚠️ Invalid username provided');
         return false;
+    }
+
+    // Watch for username changes and restore custom username
+    function watchUsername() {
+        // In updated code, check the local username variable
+        if (customUsername && typeof username !== 'undefined' && username !== customUsername && username === 'unknown') {
+            username = customUsername;
+            console.log('🔄 Restored custom username:', customUsername);
+        }
     }
 
     // Function to get current images displayed
@@ -35,32 +55,55 @@
         return images;
     }
 
-    // Function to find correct answer from qa array
+    // Function to find correct answer from updated code (computeAnswer/ans) or qa array (old code)
     function findCorrectAnswer(currentImages) {
         if (!currentImages || currentImages.length !== 4) return null;
 
-        // Search through qa array for exact match (including order)
-        for (let i = 0; i < qa.length; i++) {
-            const qaEntry = qa[i];
-            const qaImages = qaEntry.slice(0, 4);
-
-            // Check exact match including order
-            let isExactMatch = true;
-            for (let j = 0; j < 4; j++) {
-                if (currentImages[j] !== qaImages[j]) {
-                    isExactMatch = false;
-                    break;
+        // Updated code path: use computeAnswer() which sets global `ans` ("b1".."b4")
+        if (typeof computeAnswer === 'function') {
+            try {
+                computeAnswer();
+                if (typeof ans === 'string' && ans.startsWith('b')) {
+                    const position = parseInt(ans.slice(1), 10);
+                    if (position >= 1 && position <= 4) {
+                        return {
+                            position,
+                            images: currentImages,
+                            ans
+                        };
+                    }
                 }
-            }
-
-            if (isExactMatch) {
-                return {
-                    position: parseInt(qaEntry[4]),
-                    images: qaImages,
-                    index: i
-                };
+            } catch (e) {
+                // Fall through to legacy qa[] matching
             }
         }
+
+        // Fallback to qa array (old code compatibility)
+        if (typeof qa !== 'undefined' && Array.isArray(qa)) {
+            // Search through qa array for exact match (including order)
+            for (let i = 0; i < qa.length; i++) {
+                const qaEntry = qa[i];
+                const qaImages = qaEntry.slice(0, 4);
+
+                // Check exact match including order
+                let isExactMatch = true;
+                for (let j = 0; j < 4; j++) {
+                    if (currentImages[j] !== qaImages[j]) {
+                        isExactMatch = false;
+                        break;
+                    }
+                }
+
+                if (isExactMatch) {
+                    return {
+                        position: parseInt(qaEntry[4]),
+                        images: qaImages,
+                        index: i
+                    };
+                }
+            }
+        }
+
         return null;
     }
 
@@ -68,23 +111,23 @@
     function autoClick() {
         if (!hackActive) return;
 
-        // Check if score is getting too high (to avoid exceeding the 79 limit for dialog)
+        // Optional score cap (disabled by default for updated code)
         const scoreElement = document.getElementById('score');
-        if (scoreElement) {
+        if (scoreElement && typeof hackSettings.maxScore === 'number') {
             const currentScore = parseInt(scoreElement.innerText) || 0;
-            if (currentScore >= 79) {
-                console.log('📊 Score is getting high! Stopping hack to keep score under 80 for dialog.');
+            if (currentScore >= hackSettings.maxScore) {
+                console.log('📊 Score cap reached. Stopping hack at:', hackSettings.maxScore);
                 stopHack();
                 return;
             }
         }
 
-        // Check if timer has reached 2 seconds (give time for score dialog)
+        // Optional timer stop (disabled by default for updated code)
         const timerElement = document.getElementById('timer');
-        if (timerElement) {
+        if (timerElement && typeof hackSettings.stopAtTimer === 'number') {
             const timeLeft = parseInt(timerElement.innerText) || 0;
-            if (timeLeft <= 2) {
-                console.log('⏰ Time\'s almost up! Stopping hack to allow score submission dialog.');
+            if (timeLeft <= hackSettings.stopAtTimer) {
+                console.log('⏰ Timer threshold reached. Stopping hack at:', hackSettings.stopAtTimer, 'seconds');
                 stopHack();
                 return;
             }
@@ -95,6 +138,14 @@
             if (!currentImages) {
                 console.log('⏳ Waiting for images to load...');
                 return;
+            }
+
+            // Throttle click rate to slow scoring
+            if (typeof hackSettings.minClickDelayMs === 'number') {
+                const now = Date.now();
+                if (now - lastClickAt < hackSettings.minClickDelayMs) {
+                    return;
+                }
             }
 
             // Only click if this is a new question (images changed)
@@ -118,6 +169,7 @@
 
             if (element) {
                 element.click();
+                lastClickAt = Date.now();
                 console.log('✅ Auto-clicked:', correctElementId, '(correct answer position:', answer.position, ')');
                 console.log('📸 Images:', currentImages.join(', '));
             } else {
@@ -136,11 +188,14 @@
 
         hackActive = true;
         lastImages = null; // Reset for new game
-        console.log('🚀 Starting maze hack... (will auto-stop at timer 2)');
+        console.log('🚀 Starting maze hack... (slow scoring, cap at 50)');
 
         // Check for new questions every 200ms
         hackInterval = setInterval(() => {
             if (!hackActive) return;
+
+            // Watch and restore custom username if needed
+            watchUsername();
 
             // Check if images have changed (new question)
             const currentImages = getCurrentImages();
@@ -183,8 +238,9 @@
     // Auto-start the hack
     startHack();
 
-    console.log('🎮 Hack loaded! Auto-stops when timer reaches 2 seconds or score reaches 79');
-    console.log('📋 Available commands:');
+    console.log('🎮 Hack loaded! Auto-stops when timer reaches 2 seconds or score reaches 50');
+    console.log('👤 Username protection active - custom names will be preserved (works with updated code)');
+    console.log('�📋 Available commands:');
     console.log('   stophack() - Stop the auto-hack manually');
     console.log('   starthack() - Restart the auto-hack');
     console.log('   setUsername("YourName") - Set username for score history');

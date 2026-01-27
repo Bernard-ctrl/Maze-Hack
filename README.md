@@ -3,6 +3,8 @@
 ## 🎯 Overview
 This project demonstrates a technical analysis and automated solver for the Mists of Tirna Scithe Maze game. It showcases DOM manipulation, pattern matching algorithms, and real-time game state analysis techniques.
 
+**✅ Updated for Compatibility**: Now works with both original and updated game code versions, automatically detecting and using the correct data structures (`ques[]` for updated code, `qa[]` for original code).
+
 ## 🚀 How It Works
 1. **DOM State Extraction**: Reads current game state directly from HTML elements
 2. **Pattern Recognition**: Matches image sequences against known question database
@@ -29,7 +31,7 @@ getCurrentImages()
 // Test pattern matching logic
 findAnswer()
 
-// Set custom username for score history
+// Set custom username for score history (protected from resets)
 setUsername("YourName")
 
 // Demonstrate algorithmic solving
@@ -73,11 +75,14 @@ function analyzeGameState(currentImages) {
 - ✅ **Single Interaction**: Prevents duplicate actions
 - ✅ **Error Resilience**: Handles missing elements gracefully
 - ✅ **Control Systems**: Start/stop analysis capabilities
+- ✅ **Username Protection**: Custom names preserved from game resets (works with updated code)
+- ✅ **Updated Code Compatibility**: Automatically detects and works with both `ques[]` (updated) and `qa[]` (original) arrays
 - ✅ **Detailed Logging**: Comprehensive execution tracking
 
 ## 🎮 Game Architecture Study
 - `p1-p4` elements: Primary interactive components
-- `qa` database: Structured question/answer repository
+- `ques[]` database: Updated code question array (shuffled image sequences)
+- `qa[]` database: Original code question/answer repository
 - Real-time state updates and timing mechanisms
 
 ## 🔍 Research Applications
